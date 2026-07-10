@@ -1,0 +1,6 @@
+{
+  "name": "Video Intelligence Explorer",
+  "description": "An interactive playground and analyzer exploring the nine core features of Google Cloud Video Intelligence API, backed by Gemini 3.5 Flash for actual visual feature detection and overlays.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
