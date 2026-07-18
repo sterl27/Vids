@@ -12,3 +12,62 @@
   transition: all 0.15s ease-out;
 }
 
+/* Accessibility High-Contrast Light Mode Overrides */
+.theme-light {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.theme-light .bg-black,
+.theme-light .bg-zinc-950,
+.theme-light .bg-zinc-950\/40,
+.theme-light .bg-zinc-950\/50,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/40 {
+  background-color: #ffffff !important;
+}
+
+.theme-light .border-zinc-900,
+.theme-light .border-slate-900,
+.theme-light .border-slate-800,
+.theme-light .border-zinc-800 {
+  border-color: #cbd5e1 !important;
+}
+
+.theme-light .bg-zinc-900,
+.theme-light .bg-slate-900\/30,
+.theme-light .bg-slate-900/60 {
+  background-color: #f1f5f9 !important;
+}
+
+.theme-light h1,
+.theme-light h2,
+.theme-light h3,
+.theme-light h4,
+.theme-light h5,
+.theme-light h6 {
+  color: #0f172a !important;
+}
+
+.theme-light p,
+.theme-light li,
+.theme-light span:not(.text-indigo-400):not(.text-emerald-400):not(.text-rose-400):not(.text-amber-400):not(.text-sky-400) {
+  color: #334155 !important;
+}
+
+.theme-light .text-zinc-500,
+.theme-light .text-slate-500,
+.theme-light .text-zinc-600,
+.theme-light .text-slate-600 {
+  color: #475569 !important;
+}
+
+/* Ensure focus states are very clear for accessibility in both modes */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid #6366f1 !important;
+  outline-offset: 2px !important;
+}
+

@@ -186,6 +186,99 @@ ${featureInstruction}
   }
 });
 
+// Google Drive API proxy to fetch user files
+app.get("/api/drive/files", async (req, res) => {
+  try {
+    const token = req.query.token as string;
+    if (!token) {
+      return res.status(401).json({ error: "Missing authorization token" });
+    }
+    const q = req.query.q as string || "trashed = false";
+    const pageToken = req.query.pageToken as string || "";
+    
+    const url = new URL("https://www.googleapis.com/drive/v3/files");
+    url.searchParams.append("q", q);
+    url.searchParams.append("fields", "nextPageToken, files(id, name, mimeType, size, modifiedTime, thumbnailLink, iconLink)");
+    url.searchParams.append("pageSize", "30");
+    if (pageToken) {
+      url.searchParams.append("pageToken", pageToken);
+    }
+
+    const driveRes = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!driveRes.ok) {
+      const errText = await driveRes.text();
+      return res.status(driveRes.status).json({ error: `Google Drive API error: ${errText}` });
+    }
+
+    const data = await driveRes.json();
+    return res.json(data);
+  } catch (error: any) {
+    console.error("Drive Files Error:", error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Google Drive video stream proxy (supporting Range headers for seeking)
+app.get("/api/drive/video", async (req, res) => {
+  try {
+    const { fileId, token } = req.query;
+    if (!fileId || !token) {
+      return res.status(400).json({ error: "Missing fileId or token query parameter" });
+    }
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`
+    };
+
+    if (req.headers.range) {
+      headers["Range"] = req.headers.range as string;
+    }
+
+    const driveRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+      headers
+    });
+
+    if (!driveRes.ok && driveRes.status !== 206) {
+      const errText = await driveRes.text();
+      return res.status(driveRes.status).json({ error: `Google Drive media error: ${errText}` });
+    }
+
+    // Forward relevant headers
+    if (driveRes.headers.get("content-type")) {
+      res.setHeader("Content-Type", driveRes.headers.get("content-type")!);
+    }
+    if (driveRes.headers.get("content-length")) {
+      res.setHeader("Content-Length", driveRes.headers.get("content-length")!);
+    }
+    if (driveRes.headers.get("content-range")) {
+      res.setHeader("Content-Range", driveRes.headers.get("content-range")!);
+    }
+    res.setHeader("Accept-Ranges", "bytes");
+    res.status(driveRes.status);
+
+    if (driveRes.body) {
+      // Stream the response body
+      const reader = (driveRes.body as any).getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+    }
+    res.end();
+  } catch (error: any) {
+    console.error("Drive Video Proxy Error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
 // Configure client assets serving / routing
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

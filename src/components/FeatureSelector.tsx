@@ -92,11 +92,13 @@ const FEATURES_META: FeatureMeta[] = [
 interface FeatureSelectorProps {
   selectedFeature: VideoFeature;
   onFeatureSelect: (feature: VideoFeature) => void;
+  theme?: "light" | "dark-hc";
 }
 
 export const FeatureSelector: React.FC<FeatureSelectorProps> = ({
   selectedFeature,
   onFeatureSelect,
+  theme = "dark-hc",
 }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
@@ -127,7 +129,7 @@ export const FeatureSelector: React.FC<FeatureSelectorProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-display text-lg font-semibold text-slate-100 flex items-center gap-2">
+      <h3 className="font-display text-lg font-semibold text-zinc-100 flex items-center gap-2">
         <BookOpen className="h-5 w-5 text-indigo-400" />
         Select API Feature
       </h3>
@@ -143,22 +145,22 @@ export const FeatureSelector: React.FC<FeatureSelectorProps> = ({
               className={`group relative flex flex-col items-start p-4 rounded-xl border text-left transition-all ${
                 isSelected
                   ? "border-indigo-500 bg-indigo-950/20 shadow-md shadow-indigo-950/20"
-                  : "border-slate-800/80 bg-slate-900/30 hover:border-slate-700 hover:bg-slate-900/50"
+                  : "border-zinc-850 bg-zinc-900/20 hover:border-zinc-700 hover:bg-zinc-900/40"
               }`}
             >
               <div
                 className={`p-2.5 rounded-lg mb-3 transition-colors ${
                   isSelected
                     ? "bg-indigo-500 text-white"
-                    : "bg-slate-800 text-slate-400 group-hover:text-indigo-400 group-hover:bg-slate-800/80"
+                    : "bg-zinc-900 text-zinc-400 group-hover:text-indigo-400 group-hover:bg-zinc-800"
                 }`}
               >
                 {getIcon(feat.icon)}
               </div>
-              <h4 className="font-display font-semibold text-sm text-slate-200 group-hover:text-indigo-300 transition-colors">
+              <h4 className="font-display font-semibold text-sm text-zinc-200 group-hover:text-indigo-300 transition-colors">
                 {feat.name}
               </h4>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
                 {feat.shortDesc}
               </p>
             </button>
@@ -168,13 +170,13 @@ export const FeatureSelector: React.FC<FeatureSelectorProps> = ({
 
       {/* Deep-dive Details Panel */}
       {activeFeatureObj && (
-        <div className="bg-slate-900/50 border border-slate-800/80 rounded-xl p-4 mt-3 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800/80 pb-3">
+        <div className="bg-zinc-900/20 border border-zinc-850 rounded-xl p-4 mt-3 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-zinc-800 pb-3">
             <div>
               <span className="text-[10px] uppercase font-mono tracking-wider text-indigo-400 font-semibold bg-indigo-500/10 px-2 py-0.5 rounded">
                 Selected feature
               </span>
-              <h4 className="font-display font-bold text-base text-slate-200 mt-1">
+              <h4 className="font-display font-bold text-base text-zinc-200 mt-1">
                 {activeFeatureObj.name}
               </h4>
             </div>
@@ -182,13 +184,13 @@ export const FeatureSelector: React.FC<FeatureSelectorProps> = ({
               href={activeFeatureObj.docsUrl}
               target="_blank"
               referrerPolicy="no-referrer"
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1.5 bg-slate-800/60 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors"
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-800 transition-colors"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               API Documentation
             </a>
           </div>
-          <p className="text-sm text-slate-400 leading-relaxed">
+          <p className="text-sm text-zinc-400 leading-relaxed">
             {activeFeatureObj.longDesc}
           </p>
         </div>

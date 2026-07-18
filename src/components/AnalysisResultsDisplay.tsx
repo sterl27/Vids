@@ -18,18 +18,20 @@ import {
 interface AnalysisResultsDisplayProps {
   selectedFeature: VideoFeature;
   result: VideoAnalysisResult | null;
+  theme?: "light" | "dark-hc";
 }
 
 export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
   selectedFeature,
   result,
+  theme = "dark-hc",
 }) => {
   if (!result) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 text-center border border-slate-800/80 bg-slate-900/10 rounded-2xl">
-        <Cpu className="h-8 w-8 text-slate-600 mb-2" />
-        <h4 className="font-display font-semibold text-sm text-slate-300">No Analysis Cached Yet</h4>
-        <p className="text-xs text-slate-500 max-w-[280px] mt-1 leading-relaxed">
+      <div className="flex flex-col items-center justify-center p-8 text-center border border-zinc-900 bg-zinc-950/40 rounded-2xl">
+        <Cpu className="h-8 w-8 text-zinc-600 mb-2" />
+        <h4 className="font-display font-semibold text-sm text-zinc-300">No Analysis Cached Yet</h4>
+        <p className="text-xs text-zinc-500 max-w-[280px] mt-1 leading-relaxed">
           Select a feature above and click <strong>Analyze Video Feature</strong> to process live frames.
         </p>
       </div>
@@ -68,14 +70,14 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
           {categories.map((cat, idx) => {
             const config = likelihoodColors[cat.val || "VERY_UNLIKELY"];
             return (
-              <div key={idx} className="p-3.5 bg-slate-900/30 border border-slate-800/80 rounded-xl space-y-2">
+              <div key={idx} className="p-3.5 bg-zinc-900/10 border border-zinc-800/50 rounded-xl space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-300">{cat.name}</span>
+                  <span className="text-xs font-medium text-zinc-300">{cat.name}</span>
                   <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${config.bg} ${config.text} ${config.border}`}>
                     {cat.val}
                   </span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-800/80 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-zinc-900 rounded-full overflow-hidden">
                   <div className={`h-full rounded-full ${cat.val === "VERY_UNLIKELY" || cat.val === "UNLIKELY" ? "bg-emerald-500" : cat.val === "POSSIBLE" ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: config.width }}></div>
                 </div>
               </div>
@@ -89,18 +91,18 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
   // Render Label Detection card rows
   const renderLabels = () => {
     const list = result.labels;
-    if (!list || list.length === 0) return <p className="text-xs text-slate-500">No label annotations found.</p>;
+    if (!list || list.length === 0) return <p className="text-xs text-zinc-500">No label annotations found.</p>;
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {list.map((item, idx) => (
-          <div key={idx} className="p-4 bg-slate-900/30 border border-slate-800/80 rounded-xl space-y-3">
+          <div key={idx} className="p-4 bg-zinc-900/20 border border-zinc-850 rounded-xl space-y-3">
             <div className="flex items-start justify-between">
               <div>
-                <h5 className="font-display font-semibold text-sm text-slate-200 capitalize">{item.entity}</h5>
+                <h5 className="font-display font-semibold text-sm text-zinc-200 capitalize">{item.entity}</h5>
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {item.categories.map((cat, cIdx) => (
-                    <span key={cIdx} className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">
+                    <span key={cIdx} className="text-[10px] bg-zinc-900 text-zinc-400 px-1.5 py-0.5 rounded font-mono border border-zinc-800">
                       {cat}
                     </span>
                   ))}
@@ -394,28 +396,28 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
       {/* Header summaries */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* API Response Summary */}
-        <div className="lg:col-span-2 p-4 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-2">
-          <h4 className="font-display font-semibold text-sm text-slate-300 flex items-center gap-1.5">
+        <div className="lg:col-span-2 p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-2">
+          <h4 className="font-display font-semibold text-sm text-zinc-300 flex items-center gap-1.5">
             <Bookmark className="h-4 w-4 text-indigo-400" />
             AI Video Understanding Summary
           </h4>
-          <p className="text-xs md:text-sm text-slate-400 leading-relaxed font-sans">
+          <p className="text-xs md:text-sm text-zinc-400 leading-relaxed font-sans">
             {result.summary}
           </p>
         </div>
 
         {/* AI Key Insights */}
-        <div className="p-4 bg-slate-900/40 border border-slate-800/80 rounded-2xl space-y-2 flex flex-col justify-between">
+        <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-2 flex flex-col justify-between">
           <div>
-            <h4 className="font-display font-semibold text-sm text-slate-300 flex items-center gap-1.5">
+            <h4 className="font-display font-semibold text-sm text-zinc-300 flex items-center gap-1.5">
               <TrendingUp className="h-4 w-4 text-emerald-400" />
               Temporal Insights
             </h4>
-            <ul className="text-xs text-slate-400 list-disc list-inside space-y-1.5 mt-2 leading-relaxed">
+            <ul className="text-xs text-zinc-400 list-disc list-inside space-y-1.5 mt-2 leading-relaxed">
               {result.insights && result.insights.length > 0 ? (
                 result.insights.map((ins, index) => (
-                  <li key={index} className="pl-1 text-slate-400">
-                    <span className="text-slate-300">{ins}</span>
+                  <li key={index} className="pl-1 text-zinc-400">
+                    <span className="text-zinc-300">{ins}</span>
                   </li>
                 ))
               ) : (
@@ -430,8 +432,8 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
       </div>
 
       {/* Feature Specific Detail List Card */}
-      <div className="p-5 bg-slate-900/20 border border-slate-800/80 rounded-2xl space-y-4">
-        <h4 className="font-display font-bold text-base text-slate-100 flex items-center gap-2">
+      <div className="p-5 bg-zinc-950/50 border border-zinc-900 rounded-2xl space-y-4 shadow-sm">
+        <h4 className="font-display font-bold text-base text-zinc-100 flex items-center gap-2">
           {selectedFeature === "label_detection" && <Tag className="h-5 w-5 text-indigo-400" />}
           {selectedFeature === "face_detection" && <Smile className="h-5 w-5 text-emerald-400" />}
           {selectedFeature === "explicit_content" && <ShieldAlert className="h-5 w-5 text-rose-400" />}

@@ -23,6 +23,7 @@ interface VideoOverlayPlayerProps {
   isAnalyzing: boolean;
   customPrompt: string;
   setCustomPrompt: (val: string) => void;
+  theme?: "light" | "dark-hc";
 }
 
 export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
@@ -35,6 +36,7 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
   isAnalyzing,
   customPrompt,
   setCustomPrompt,
+  theme = "dark-hc",
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +44,11 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [localDuration, setLocalDuration] = useState(duration);
+
+  useEffect(() => {
+    setLocalDuration(duration);
+  }, [duration, videoUrl]);
 
   // Synchronize playing state with HTMLVideoElement events
   useEffect(() => {
@@ -51,15 +58,26 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleLoadedMetadata = () => {
+      if (video.duration && !isNaN(video.duration) && video.duration !== Infinity) {
+        setLocalDuration(video.duration);
+      }
+    };
 
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
     video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+
+    if (video.readyState >= 1 && video.duration && !isNaN(video.duration) && video.duration !== Infinity) {
+      setLocalDuration(video.duration);
+    }
 
     return () => {
       video.removeEventListener("play", handlePlay);
       video.removeEventListener("pause", handlePause);
       video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [videoUrl]);
 
@@ -82,7 +100,7 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
     const clickX = e.clientX - rect.left;
     const width = rect.width;
     const clickPercent = clickX / width;
-    const targetTime = clickPercent * duration;
+    const targetTime = clickPercent * localDuration;
 
     if (videoRef.current) {
       videoRef.current.currentTime = targetTime;
@@ -127,7 +145,7 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
 
       // Determine number of frames to capture (usually 6-8 frames are enough for full description and quick speed)
       const numberOfFrames = 6;
-      const step = duration / (numberOfFrames + 1);
+      const step = localDuration / (numberOfFrames + 1);
 
       // Create a function to capture each frame sequentially
       for (let i = 1; i <= numberOfFrames; i++) {
@@ -370,7 +388,7 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
           >
             <div
               className="bg-indigo-500 h-full rounded-full"
-              style={{ width: `${(currentTime / duration) * 100}%` }}
+              style={{ width: `${(currentTime / localDuration) * 100}%` }}
             />
           </div>
 
@@ -388,7 +406,7 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
                 )}
               </button>
               <div className="text-xs font-mono text-slate-300">
-                {currentTime.toFixed(1)}s / {duration.toFixed(1)}s
+                {currentTime.toFixed(1)}s / {localDuration.toFixed(1)}s
               </div>
             </div>
 
@@ -431,7 +449,11 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder="Add custom context / instructions (e.g. 'Look for coffee mugs' or 'Listen for professional tones')"
-            className="w-full bg-slate-900/60 border border-slate-800 text-sm text-slate-200 placeholder-slate-500 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:border-indigo-500 transition-all font-sans"
+            className={`w-full border text-sm rounded-xl px-4 py-3 pr-10 focus:outline-none transition-all font-sans ${
+              theme === "light"
+                ? "bg-zinc-100 border-zinc-300 text-zinc-900 placeholder-zinc-500 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                : "bg-slate-900/60 border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            }`}
           />
           <Sparkles className="absolute right-3.5 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
         </div>
@@ -439,7 +461,11 @@ export const VideoOverlayPlayer: React.FC<VideoOverlayPlayerProps> = ({
         <button
           onClick={captureAndAnalyze}
           disabled={isAnalyzing}
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-display font-semibold text-sm px-5 py-3 rounded-xl disabled:opacity-50 transition-all active:scale-[0.98]"
+          className={`flex items-center justify-center gap-2 text-white font-display font-semibold text-sm px-5 py-3 rounded-xl disabled:opacity-50 transition-all active:scale-[0.98] min-h-[44px] cursor-pointer ${
+            theme === "light"
+              ? "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800"
+              : "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700"
+          }`}
         >
           <RefreshCw className={`h-4 w-4 ${isAnalyzing ? "animate-spin" : ""}`} />
           Analyze Video Feature

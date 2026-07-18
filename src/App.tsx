@@ -4,6 +4,8 @@ import { CuratedVideos, CURATED_VIDEOS } from "./components/CuratedVideos";
 import { FeatureSelector } from "./components/FeatureSelector";
 import { VideoOverlayPlayer } from "./components/VideoOverlayPlayer";
 import { AnalysisResultsDisplay } from "./components/AnalysisResultsDisplay";
+import { GoogleDriveBrowser } from "./components/GoogleDriveBrowser";
+import { GoogleMeetPanel } from "./components/GoogleMeetPanel";
 import {
   Eye,
   Tv,
@@ -13,6 +15,8 @@ import {
   ExternalLink,
   Cpu,
   Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 // Pre-cached high-quality analysis data for the stock clips to enable instant playground interaction
@@ -257,6 +261,20 @@ const PRE_CACHED_ANALYSES: Record<string, Partial<Record<VideoFeature, VideoAnal
 };
 
 export default function App() {
+  const [theme, setTheme] = useState<"light" | "dark-hc">(() => {
+    const saved = localStorage.getItem("app-theme");
+    if (saved === "light" || saved === "dark-hc") return saved;
+    return "dark-hc"; // Default is high-contrast dark
+  });
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "light" ? "dark-hc" : "light";
+      localStorage.setItem("app-theme", next);
+      return next;
+    });
+  };
+
   const [selectedVideo, setSelectedVideo] = useState(CURATED_VIDEOS[0]);
   const [selectedFeature, setSelectedFeature] = useState<VideoFeature>("label_detection");
   const [customPrompt, setCustomPrompt] = useState("");
@@ -353,36 +371,62 @@ export default function App() {
   const activeAnalysis = getActiveAnalysis();
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className={`min-h-screen font-sans transition-colors duration-200 ${
+      theme === "light" ? "bg-zinc-50 text-zinc-900" : "bg-black text-zinc-100"
+    }`}>
       {/* Visual Header Banner */}
-      <header className="border-b border-slate-900 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
+      <header className={`border-b sticky top-0 z-50 backdrop-blur-md transition-colors duration-200 ${
+        theme === "light" ? "border-zinc-200 bg-white/90" : "border-zinc-900 bg-black/80"
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-950/40">
               <Eye className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-base md:text-lg tracking-tight flex items-center gap-1.5">
+              <h1 className={`font-display font-bold text-base md:text-lg tracking-tight flex items-center gap-1.5 ${
+                theme === "light" ? "text-zinc-900" : "text-zinc-100"
+              }`}>
                 Video Intelligence Explorer
                 <span className="text-[10px] font-mono bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded-full font-semibold">
                   API Playground
                 </span>
               </h1>
-              <p className="text-[10px] text-slate-500 font-mono">
+              <p className={`text-[10px] font-mono ${
+                theme === "light" ? "text-zinc-650" : "text-zinc-500"
+              }`}>
                 Powered by Gemini 3.5 & Google Cloud Vision SDK
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <span className="text-xs text-emerald-400 font-mono bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+          <div className="flex items-center space-x-3">
+            {/* Accessibility Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-xl border transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                theme === "light"
+                  ? "bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-900 focus:ring-2 focus:ring-zinc-600"
+                  : "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-white focus:ring-2 focus:ring-white"
+              }`}
+              aria-label={`Switch to ${theme === "light" ? "High-Contrast Dark" : "Light"} mode`}
+              title={`Switch to ${theme === "light" ? "High-Contrast Dark" : "Light"} mode`}
+            >
+              {theme === "light" ? <Moon className="h-5 w-5 text-zinc-800" /> : <Sun className="h-5 w-5 text-amber-400" />}
+            </button>
+
+            <span className={`text-xs font-mono px-2 py-1 rounded-full border hidden sm:flex items-center gap-1 ${
+              theme === "light" ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+            }`}>
               <ShieldCheck className="h-3.5 w-3.5" /> Engine Live
             </span>
             <a
               href="https://cloud.google.com/video-intelligence"
               target="_blank"
               referrerPolicy="no-referrer"
-              className="text-xs text-slate-400 hover:text-indigo-400 font-medium transition-colors hidden sm:flex items-center gap-1"
+              className={`text-xs font-medium transition-colors hidden md:flex items-center gap-1 ${
+                theme === "light" ? "text-zinc-600 hover:text-indigo-650" : "text-zinc-400 hover:text-indigo-400"
+              }`}
             >
               Google Cloud API <ExternalLink className="h-3 w-3" />
             </a>
@@ -393,22 +437,30 @@ export default function App() {
       {/* Main Workspace Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Info Explainer block */}
-        <div className="p-4 bg-slate-900/30 border border-slate-900 rounded-2xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className={`p-4 border rounded-2xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between shadow-sm transition-colors duration-200 ${
+          theme === "light"
+            ? "bg-white border-zinc-200 text-zinc-900 shadow-zinc-100"
+            : "bg-zinc-950 border-zinc-900 text-zinc-100 shadow-zinc-950/50"
+        }`}>
           <div className="flex items-start sm:items-center gap-3">
-            <div className="p-2.5 bg-slate-800 rounded-xl text-indigo-400 flex-shrink-0">
+            <div className={`p-2.5 rounded-xl text-indigo-500 flex-shrink-0 border transition-colors ${
+              theme === "light" ? "bg-zinc-100 border-zinc-200" : "bg-zinc-900 border-zinc-800"
+            }`}>
               <Info className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-sm text-slate-200">
+              <h3 className={`font-display font-semibold text-sm ${theme === "light" ? "text-zinc-900" : "text-zinc-200"}`}>
                 Interactive Video Intelligence Demonstration
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                Interact with predefined tracks immediately. To run fully custom analysis on any selected feature, click <strong className="text-indigo-400">Analyze Video Feature</strong> below. The backend extractors will slice keyframe buffers and evaluate deep spatial attributes.
+              <p className={`text-xs mt-0.5 leading-relaxed ${theme === "light" ? "text-zinc-650" : "text-zinc-400"}`}>
+                Interact with predefined tracks immediately. To run fully custom analysis on any selected feature, click <strong className="text-indigo-600 font-semibold">Analyze Video Feature</strong> below. The backend extractors will slice keyframe buffers and evaluate deep spatial attributes.
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1 text-xs text-slate-500 font-mono bg-slate-900/60 border border-slate-800 px-3 py-1.5 rounded-xl">
-            <Zap className="h-3.5 w-3.5 text-indigo-400 animate-pulse" />
+          <div className={`flex items-center gap-1 text-xs font-mono px-3 py-1.5 rounded-xl border ${
+            theme === "light" ? "text-zinc-650 bg-zinc-100 border-zinc-200" : "text-zinc-500 bg-zinc-900/60 border-zinc-800"
+          }`}>
+            <Zap className="h-3.5 w-3.5 text-indigo-500 animate-pulse" />
             Instant Visual Overlays
           </div>
         </div>
@@ -418,22 +470,28 @@ export default function App() {
           {/* Left Column: Player and Results (Take up 8 cols on desktop) */}
           <div className="lg:col-span-8 space-y-6">
             {/* Embedded player and prompt line */}
-            <div className="bg-slate-900/20 border border-slate-900 rounded-2xl p-4 md:p-5 space-y-4">
+            <div className={`border rounded-2xl p-4 md:p-5 space-y-4 shadow-sm transition-colors duration-200 ${
+              theme === "light" ? "bg-white border-zinc-200" : "bg-zinc-950 border-zinc-900 shadow-zinc-950/50"
+            }`}>
               <div className="flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-semibold block">
+                  <span className={`text-[10px] uppercase font-mono tracking-wider font-semibold block ${
+                    theme === "light" ? "text-zinc-550" : "text-zinc-550"
+                  }`}>
                     Active stream
                   </span>
-                  <h2 className="font-display font-bold text-base md:text-lg text-slate-100 flex items-center gap-2">
-                    <Video className="h-4.5 w-4.5 text-indigo-400" />
+                  <h2 className={`font-display font-bold text-base md:text-lg flex items-center gap-2 ${
+                    theme === "light" ? "text-zinc-900" : "text-zinc-100"
+                  }`}>
+                    <Video className="h-4.5 w-4.5 text-indigo-500" />
                     {selectedVideo.title}
                   </h2>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-semibold block">
+                  <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 font-semibold block">
                     Feature view
                   </span>
-                  <span className="text-xs font-mono font-bold text-indigo-400 uppercase">
+                  <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase">
                     {selectedFeature.replace("_", " ")}
                   </span>
                 </div>
@@ -449,35 +507,42 @@ export default function App() {
                 isAnalyzing={isAnalyzing}
                 customPrompt={customPrompt}
                 setCustomPrompt={setCustomPrompt}
+                theme={theme}
               />
             </div>
 
             {/* Analysis details displays */}
-            <AnalysisResultsDisplay selectedFeature={selectedFeature} result={activeAnalysis} />
+            <AnalysisResultsDisplay selectedFeature={selectedFeature} result={activeAnalysis} theme={theme} />
           </div>
 
           {/* Right Column: Source and Feature select parameters (Take up 4 cols on desktop) */}
           <div className="lg:col-span-4 space-y-6">
             {/* Select Stock / Drag-Drop custom clips */}
-            <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-4 md:p-5 space-y-4">
-              <CuratedVideos onVideoSelect={handleVideoSelect} selectedUrl={selectedVideo.url} />
-            </div>
+            <CuratedVideos onVideoSelect={handleVideoSelect} selectedUrl={selectedVideo.url} theme={theme} />
+
+            {/* Google Drive Video Browser */}
+            <GoogleDriveBrowser onVideoSelect={handleVideoSelect} activeUrl={selectedVideo.url} theme={theme} />
+
+            {/* Google Meet Panel */}
+            <GoogleMeetPanel theme={theme} activeVideoTitle={selectedVideo.title} />
           </div>
         </div>
 
         {/* Bottom Feature Panel: Unified Single View Grid to choose features */}
-        <div className="bg-slate-900/30 border border-slate-900 rounded-2xl p-5 md:p-6">
-          <FeatureSelector selectedFeature={selectedFeature} onFeatureSelect={setSelectedFeature} />
-        </div>
+        <FeatureSelector selectedFeature={selectedFeature} onFeatureSelect={setSelectedFeature} theme={theme} />
       </main>
 
       {/* Humble Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 mt-12 py-8">
+      <footer className={`border-t transition-colors duration-200 mt-12 py-8 ${
+        theme === "light" ? "border-zinc-200 bg-white text-zinc-600" : "border-zinc-900 bg-black text-zinc-500"
+      }`}>
         <div className="max-w-7xl mx-auto px-4 text-center space-y-1.5">
-          <p className="text-xs text-slate-500 font-mono">
+          <p className="text-xs font-mono">
             © 2026 Google Cloud Video Intelligence API AI Explorer. Built with full TypeScript support.
           </p>
-          <div className="flex justify-center space-x-4 text-[10px] font-mono text-slate-600">
+          <div className={`flex justify-center space-x-4 text-[10px] font-mono ${
+            theme === "light" ? "text-zinc-550" : "text-zinc-600"
+          }`}>
             <span>Enterprise Grade Sandbox</span>
             <span>•</span>
             <span>Gemini LLM Extraction</span>

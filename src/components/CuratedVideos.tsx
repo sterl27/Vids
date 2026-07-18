@@ -5,6 +5,7 @@ import { Upload, Video, Clock, Check, Sparkles } from "lucide-react";
 interface CuratedVideosProps {
   onVideoSelect: (url: string, title: string, duration: number) => void;
   selectedUrl: string;
+  theme?: "light" | "dark-hc";
 }
 
 export const CURATED_VIDEOS: CuratedVideo[] = [
@@ -49,6 +50,7 @@ export const CURATED_VIDEOS: CuratedVideo[] = [
 export const CuratedVideos: React.FC<CuratedVideosProps> = ({
   onVideoSelect,
   selectedUrl,
+  theme = "dark-hc",
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -94,7 +96,7 @@ export const CuratedVideos: React.FC<CuratedVideosProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-lg font-semibold text-slate-100 flex items-center gap-2">
+        <h3 className="font-display text-lg font-semibold text-zinc-100 flex items-center gap-2">
           <Video className="h-5 w-5 text-indigo-400" />
           Select Video Source
         </h3>
@@ -114,7 +116,7 @@ export const CuratedVideos: React.FC<CuratedVideosProps> = ({
         className={`relative group cursor-pointer border-2 border-dashed rounded-xl p-5 text-center transition-all ${
           isDragging
             ? "border-indigo-400 bg-indigo-950/20"
-            : "border-slate-800 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-900/60"
+            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/10 hover:bg-zinc-900/20"
         }`}
       >
         <input
@@ -125,14 +127,14 @@ export const CuratedVideos: React.FC<CuratedVideosProps> = ({
           className="hidden"
         />
         <div className="flex flex-col items-center justify-center space-y-2">
-          <div className="p-3 bg-slate-800/80 rounded-lg text-slate-400 group-hover:text-indigo-400 group-hover:bg-indigo-950/40 transition-colors">
+          <div className="p-3 bg-zinc-900/80 rounded-lg text-zinc-400 group-hover:text-indigo-400 group-hover:bg-indigo-950/40 transition-colors border border-zinc-800">
             <Upload className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-200">
+            <p className="text-sm font-medium text-zinc-200">
               Drag & drop your own MP4 video or <span className="text-indigo-400 underline">browse</span>
             </p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-zinc-500 mt-1">
               Supports any common web-supported video format (.mp4, .webm)
             </p>
           </div>
@@ -140,9 +142,9 @@ export const CuratedVideos: React.FC<CuratedVideosProps> = ({
       </div>
 
       <div className="relative flex items-center py-2">
-        <div className="flex-grow border-t border-slate-800/80"></div>
-        <span className="flex-shrink mx-4 text-xs font-mono text-slate-600 uppercase tracking-wider">Or Use Curated Stock Clips</span>
-        <div className="flex-grow border-t border-slate-800/80"></div>
+        <div className="flex-grow border-t border-zinc-900"></div>
+        <span className="flex-shrink mx-4 text-xs font-mono text-zinc-600 uppercase tracking-wider">Or Use Curated Stock Clips</span>
+        <div className="flex-grow border-t border-zinc-900"></div>
       </div>
 
       {/* Curated Library Grid */}
@@ -159,33 +161,33 @@ export const CuratedVideos: React.FC<CuratedVideosProps> = ({
               className={`group flex flex-col justify-between p-4 rounded-xl border text-left cursor-pointer transition-all ${
                 isSelected
                   ? "border-indigo-500 bg-indigo-950/10 shadow-lg shadow-indigo-950/20"
-                  : "border-slate-800/80 bg-slate-900/20 hover:border-slate-700 hover:bg-slate-900/40"
+                  : "border-zinc-900 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-950/80"
               }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
-                  <span className="text-[10px] uppercase font-mono tracking-wider font-semibold text-slate-500">
+                  <span className="text-[10px] uppercase font-mono tracking-wider font-semibold text-zinc-500">
                     {video.category}
                   </span>
-                  <div className="flex items-center text-xs font-mono text-slate-400 gap-1 bg-slate-800/50 px-1.5 py-0.5 rounded">
+                  <div className="flex items-center text-xs font-mono text-zinc-400 gap-1 bg-zinc-900/60 border border-zinc-800/80 px-1.5 py-0.5 rounded">
                     <Clock className="h-3 w-3" />
                     {video.duration}s
                   </div>
                 </div>
-                <h4 className="font-display font-medium text-sm text-slate-200 mt-1 group-hover:text-indigo-300 transition-colors">
+                <h4 className="font-display font-medium text-sm text-zinc-200 mt-1 group-hover:text-indigo-300 transition-colors">
                   {video.title}
                 </h4>
-                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed line-clamp-2">
+                <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed line-clamp-2">
                   {video.description}
                 </p>
               </div>
 
-              <div className="mt-3 pt-3 border-t border-slate-800/50 flex flex-wrap gap-1 items-center justify-between">
+              <div className="mt-3 pt-3 border-t border-zinc-900 flex flex-wrap gap-1 items-center justify-between">
                 <div className="flex flex-wrap gap-1">
                   {video.recommendedFeatures.slice(0, 2).map((feat) => (
                     <span
                       key={feat}
-                      className="text-[10px] font-mono bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded"
+                      className="text-[10px] font-mono bg-zinc-900 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-800"
                     >
                       {feat.replace("_", " ")}
                     </span>
