@@ -13,18 +13,23 @@ import {
   TrendingUp,
   Cpu,
   Bookmark,
+  Download,
+  FileJson,
+  History,
 } from "lucide-react";
 
 interface AnalysisResultsDisplayProps {
   selectedFeature: VideoFeature;
   result: VideoAnalysisResult | null;
   theme?: "light" | "dark-hc";
+  onSaveToHistory?: () => void;
 }
 
 export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
   selectedFeature,
   result,
   theme = "dark-hc",
+  onSaveToHistory,
 }) => {
   if (!result) {
     return (
@@ -37,6 +42,213 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
       </div>
     );
   }
+
+  const convertToCSV = (feature: VideoFeature, data: VideoAnalysisResult): string => {
+    let rows: string[][] = [];
+
+    switch (feature) {
+      case "label_detection":
+        rows.push(["Entity", "Categories", "Confidence", "Start Time (s)", "End Time (s)", "Segment Confidence"]);
+        if (data.labels) {
+          data.labels.forEach((item) => {
+            const categories = item.categories.join("; ");
+            item.segments.forEach((seg) => {
+              rows.push([
+                item.entity,
+                categories,
+                item.confidence.toString(),
+                seg.startTime.toFixed(2),
+                seg.endTime.toFixed(2),
+                seg.confidence.toString(),
+              ]);
+            });
+          });
+        }
+        break;
+
+      case "face_detection":
+        rows.push(["Face ID", "Timestamp (s)", "xMin (%)", "yMin (%)", "xMax (%)", "yMax (%)", "Joy (%)", "Sorrow (%)", "Surprise (%)", "Anger (%)"]);
+        if (data.faces) {
+          data.faces.forEach((face) => {
+            face.boundingBoxes.forEach((b) => {
+              const emo = b.emotions || { joy: 0, sorrow: 0, surprise: 0, anger: 0 };
+              rows.push([
+                face.faceId.toString(),
+                b.timestamp.toFixed(2),
+                b.box.xMin.toFixed(1),
+                b.box.yMin.toFixed(1),
+                b.box.xMax.toFixed(1),
+                b.box.yMax.toFixed(1),
+                (emo.joy * 100).toFixed(0),
+                (emo.sorrow * 100).toFixed(0),
+                (emo.surprise * 100).toFixed(0),
+                (emo.anger * 100).toFixed(0),
+              ]);
+            });
+          });
+        }
+        break;
+
+      case "explicit_content":
+        rows.push(["Category", "Likelihood Rating"]);
+        if (data.explicitContent) {
+          const ec = data.explicitContent;
+          rows.push(["Adult / Pornographic", ec.adult]);
+          rows.push(["Medical / Surgery", ec.medical]);
+          rows.push(["Violence & Gore", ec.violence]);
+          rows.push(["Racy & Suggestive", ec.racy]);
+          rows.push(["Spoof / Meme Satire", ec.spoof]);
+        }
+        break;
+
+      case "logo_recognition":
+        rows.push(["Description", "Confidence", "Timestamp (s)", "xMin (%)", "yMin (%)", "xMax (%)", "yMax (%)"]);
+        if (data.logos) {
+          data.logos.forEach((logo) => {
+            logo.boxes.forEach((b) => {
+              rows.push([
+                logo.description,
+                logo.confidence.toString(),
+                b.timestamp.toFixed(2),
+                b.box.xMin.toFixed(1),
+                b.box.yMin.toFixed(1),
+                b.box.xMax.toFixed(1),
+                b.box.yMax.toFixed(1),
+              ]);
+            });
+          });
+        }
+        break;
+
+      case "object_tracking":
+        rows.push(["Entity", "Confidence", "Track ID", "Timestamp (s)", "xMin (%)", "yMin (%)", "xMax (%)", "yMax (%)"]);
+        if (data.objects) {
+          data.objects.forEach((obj) => {
+            obj.boxes.forEach((b) => {
+              rows.push([
+                obj.entity,
+                obj.confidence.toString(),
+                obj.trackId.toString(),
+                b.timestamp.toFixed(2),
+                b.box.xMin.toFixed(1),
+                b.box.yMin.toFixed(1),
+                b.box.xMax.toFixed(1),
+                b.box.yMax.toFixed(1),
+              ]);
+            });
+          });
+        }
+        break;
+
+      case "person_detection":
+        rows.push(["Person ID", "Attire/Clothing", "Timestamp (s)", "xMin (%)", "yMin (%)", "xMax (%)", "yMax (%)"]);
+        if (data.people) {
+          data.people.forEach((p) => {
+            const clothing = p.clothing ? p.clothing.join("; ") : "";
+            p.boxes.forEach((b) => {
+              rows.push([
+                p.personId.toString(),
+                clothing,
+                b.timestamp.toFixed(2),
+                b.box.xMin.toFixed(1),
+                b.box.yMin.toFixed(1),
+                b.box.xMax.toFixed(1),
+                b.box.yMax.toFixed(1),
+              ]);
+            });
+          });
+        }
+        break;
+
+      case "shot_change":
+        rows.push(["Shot Number", "Start Time (s)", "End Time (s)", "Confidence"]);
+        if (data.shots) {
+          data.shots.forEach((shot, idx) => {
+            rows.push([
+              (idx + 1).toString(),
+              shot.startTime.toFixed(2),
+              shot.endTime.toFixed(2),
+              shot.confidence.toString(),
+            ]);
+          });
+        }
+        break;
+
+      case "speech_transcription":
+        rows.push(["Start Time (s)", "End Time (s)", "Text", "Confidence"]);
+        if (data.speech) {
+          data.speech.forEach((line) => {
+            rows.push([
+              line.startTime.toFixed(2),
+              line.endTime.toFixed(2),
+              line.text,
+              line.confidence.toString(),
+            ]);
+          });
+        }
+        break;
+
+      case "text_detection":
+        rows.push(["Text", "Confidence", "Timestamp (s)", "xMin (%)", "yMin (%)", "xMax (%)", "yMax (%)"]);
+        if (data.textDetections) {
+          data.textDetections.forEach((txt) => {
+            txt.boxes.forEach((b) => {
+              rows.push([
+                txt.text,
+                txt.confidence.toString(),
+                b.timestamp.toFixed(2),
+                b.box.xMin.toFixed(1),
+                b.box.yMin.toFixed(1),
+                b.box.xMax.toFixed(1),
+                b.box.yMax.toFixed(1),
+              ]);
+            });
+          });
+        }
+        break;
+
+      default:
+        rows.push(["Summary"]);
+        rows.push([data.summary]);
+    }
+
+    return rows.map((r) => r.map(cell => {
+      // Escape cells if they contain commas, quotes, or newlines
+      const escaped = cell.replace(/"/g, '""');
+      if (cell.includes(",") || cell.includes("\"") || cell.includes("\n")) {
+        return `"${escaped}"`;
+      }
+      return escaped;
+    }).join(",")).join("\n");
+  };
+
+  const downloadJSON = () => {
+    const filename = `video_intelligence_${selectedFeature}_${new Date().toISOString().split('T')[0]}.json`;
+    const jsonStr = JSON.stringify(result, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadCSV = () => {
+    const filename = `video_intelligence_${selectedFeature}_${new Date().toISOString().split('T')[0]}.csv`;
+    const csvContent = convertToCSV(selectedFeature, result);
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   // Render Explicit Content moderation meters
   const renderExplicitMeters = () => {
@@ -391,61 +603,123 @@ export const AnalysisResultsDisplay: React.FC<AnalysisResultsDisplayProps> = ({
     }
   };
 
+  const isLight = theme === "light";
+
   return (
     <div className="space-y-4">
       {/* Header summaries */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* API Response Summary */}
-        <div className="lg:col-span-2 p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-2">
-          <h4 className="font-display font-semibold text-sm text-zinc-300 flex items-center gap-1.5">
-            <Bookmark className="h-4 w-4 text-indigo-400" />
+        <div className={`p-4 border rounded-2xl space-y-2 transition-colors duration-200 lg:col-span-2 ${
+          isLight ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-950 border-zinc-900 text-zinc-100"
+        }`}>
+          <h4 className={`font-display font-semibold text-sm flex items-center gap-1.5 ${
+            isLight ? "text-zinc-800" : "text-zinc-300"
+          }`}>
+            <Bookmark className="h-4 w-4 text-indigo-500" />
             AI Video Understanding Summary
           </h4>
-          <p className="text-xs md:text-sm text-zinc-400 leading-relaxed font-sans">
+          <p className={`text-xs md:text-sm leading-relaxed font-sans ${
+            isLight ? "text-zinc-600" : "text-zinc-400"
+          }`}>
             {result.summary}
           </p>
         </div>
-
+ 
         {/* AI Key Insights */}
-        <div className="p-4 bg-zinc-950 border border-zinc-900 rounded-2xl space-y-2 flex flex-col justify-between">
+        <div className={`p-4 border rounded-2xl space-y-2 flex flex-col justify-between transition-colors duration-200 ${
+          isLight ? "bg-white border-zinc-200 text-zinc-900" : "bg-zinc-950 border-zinc-900 text-zinc-100"
+        }`}>
           <div>
-            <h4 className="font-display font-semibold text-sm text-zinc-300 flex items-center gap-1.5">
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
+            <h4 className={`font-display font-semibold text-sm flex items-center gap-1.5 ${
+              isLight ? "text-zinc-800" : "text-zinc-300"
+            }`}>
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
               Temporal Insights
             </h4>
-            <ul className="text-xs text-zinc-400 list-disc list-inside space-y-1.5 mt-2 leading-relaxed">
+            <ul className="text-xs list-disc list-inside space-y-1.5 mt-2 leading-relaxed">
               {result.insights && result.insights.length > 0 ? (
                 result.insights.map((ins, index) => (
-                  <li key={index} className="pl-1 text-zinc-400">
-                    <span className="text-zinc-300">{ins}</span>
+                  <li key={index} className="pl-1">
+                    <span className={isLight ? "text-zinc-650" : "text-zinc-400"}>{ins}</span>
                   </li>
                 ))
               ) : (
                 <>
-                  <li>Analyzed {selectedFeature.replace("_", " ")} tracks over timeline indices.</li>
-                  <li>No explicit content violations found within clips.</li>
+                  <li className={isLight ? "text-zinc-650" : "text-zinc-400"}>Analyzed {selectedFeature.replace("_", " ")} tracks over timeline indices.</li>
+                  <li className={isLight ? "text-zinc-650" : "text-zinc-400"}>No explicit content violations found within clips.</li>
                 </>
               )}
             </ul>
           </div>
         </div>
       </div>
-
+ 
       {/* Feature Specific Detail List Card */}
-      <div className="p-5 bg-zinc-950/50 border border-zinc-900 rounded-2xl space-y-4 shadow-sm">
-        <h4 className="font-display font-bold text-base text-zinc-100 flex items-center gap-2">
-          {selectedFeature === "label_detection" && <Tag className="h-5 w-5 text-indigo-400" />}
-          {selectedFeature === "face_detection" && <Smile className="h-5 w-5 text-emerald-400" />}
-          {selectedFeature === "explicit_content" && <ShieldAlert className="h-5 w-5 text-rose-400" />}
-          {selectedFeature === "logo_recognition" && <Award className="h-5 w-5 text-sky-400" />}
-          {selectedFeature === "object_tracking" && <Box className="h-5 w-5 text-amber-400" />}
-          {selectedFeature === "person_detection" && <UserCheck className="h-5 w-5 text-indigo-400" />}
-          {selectedFeature === "shot_change" && <Film className="h-5 w-5 text-emerald-400" />}
-          {selectedFeature === "speech_transcription" && <Languages className="h-5 w-5 text-indigo-400" />}
-          {selectedFeature === "text_detection" && <Type className="h-5 w-5 text-rose-400" />}
-          API Response Payload: {selectedFeature.replace("_", " ").toUpperCase()}
-        </h4>
+      <div className={`p-5 border rounded-2xl space-y-4 shadow-sm transition-colors duration-200 ${
+        isLight ? "bg-white border-zinc-200" : "bg-zinc-950/50 border-zinc-900"
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/40 pb-3">
+          <h4 className={`font-display font-bold text-base flex items-center gap-2 ${
+            isLight ? "text-zinc-900" : "text-zinc-100"
+          }`}>
+            {selectedFeature === "label_detection" && <Tag className="h-5 w-5 text-indigo-500" />}
+            {selectedFeature === "face_detection" && <Smile className="h-5 w-5 text-emerald-500" />}
+            {selectedFeature === "explicit_content" && <ShieldAlert className="h-5 w-5 text-rose-500" />}
+            {selectedFeature === "logo_recognition" && <Award className="h-5 w-5 text-sky-500" />}
+            {selectedFeature === "object_tracking" && <Box className="h-5 w-5 text-amber-500" />}
+            {selectedFeature === "person_detection" && <UserCheck className="h-5 w-5 text-indigo-500" />}
+            {selectedFeature === "shot_change" && <Film className="h-5 w-5 text-emerald-500" />}
+            {selectedFeature === "speech_transcription" && <Languages className="h-5 w-5 text-indigo-500" />}
+            {selectedFeature === "text_detection" && <Type className="h-5 w-5 text-rose-500" />}
+            API Response Payload: {selectedFeature.replace("_", " ").toUpperCase()}
+          </h4>
 
+          <div className="flex items-center gap-2 flex-wrap">
+            {onSaveToHistory && (
+              <button
+                onClick={onSaveToHistory}
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all shadow-sm focus:ring-2 min-h-[36px] cursor-pointer ${
+                  isLight
+                    ? "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 focus:ring-indigo-550"
+                    : "bg-indigo-950/40 hover:bg-indigo-950/80 text-indigo-300 border border-indigo-900 focus:ring-indigo-500"
+                }`}
+                title="Pin this analysis to your history log"
+                aria-label="Save analysis to history"
+              >
+                <History className="h-4 w-4 text-indigo-500" />
+                <span>Save to History</span>
+              </button>
+            )}
+            <button
+              onClick={downloadJSON}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all shadow-sm focus:ring-2 min-h-[36px] cursor-pointer ${
+                isLight
+                  ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300 focus:ring-zinc-600"
+                  : "bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 focus:ring-white"
+              }`}
+              title="Download results as JSON file"
+              aria-label="Download results as JSON"
+            >
+              <FileJson className="h-4 w-4 text-indigo-500" />
+              <span>Export JSON</span>
+            </button>
+            <button
+              onClick={downloadCSV}
+              className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-lg transition-all shadow-sm focus:ring-2 min-h-[36px] cursor-pointer ${
+                isLight
+                  ? "bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300 focus:ring-zinc-600"
+                  : "bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 focus:ring-white"
+              }`}
+              title="Download results as CSV file"
+              aria-label="Download results as CSV"
+            >
+              <Download className="h-4 w-4 text-emerald-500" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+ 
         {renderFeatureDetails()}
       </div>
     </div>

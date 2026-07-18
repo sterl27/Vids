@@ -23,6 +23,27 @@ provider.addScope("https://www.googleapis.com/auth/meetings.space.created");
 provider.addScope("https://www.googleapis.com/auth/meetings.space.readonly");
 provider.addScope("https://www.googleapis.com/auth/meetings.space.settings");
 
+// Add Google Chat scopes
+provider.addScope("https://www.googleapis.com/auth/chat.spaces");
+provider.addScope("https://www.googleapis.com/auth/chat.spaces.readonly");
+provider.addScope("https://www.googleapis.com/auth/chat.messages");
+provider.addScope("https://www.googleapis.com/auth/chat.messages.readonly");
+provider.addScope("https://www.googleapis.com/auth/chat.messages.create");
+provider.addScope("https://www.googleapis.com/auth/chat.memberships");
+provider.addScope("https://www.googleapis.com/auth/chat.memberships.readonly");
+
+// Add Google Docs scopes
+provider.addScope("https://www.googleapis.com/auth/documents");
+provider.addScope("https://www.googleapis.com/auth/documents.readonly");
+
+// Add Google Sheets scopes
+provider.addScope("https://www.googleapis.com/auth/spreadsheets");
+provider.addScope("https://www.googleapis.com/auth/spreadsheets.readonly");
+
+// Add Google Tasks scopes
+provider.addScope("https://www.googleapis.com/auth/tasks");
+provider.addScope("https://www.googleapis.com/auth/tasks.readonly");
+
 let isSigningIn = false;
 let cachedAccessToken: string | null = null;
 

@@ -6,6 +6,15 @@ import { VideoOverlayPlayer } from "./components/VideoOverlayPlayer";
 import { AnalysisResultsDisplay } from "./components/AnalysisResultsDisplay";
 import { GoogleDriveBrowser } from "./components/GoogleDriveBrowser";
 import { GoogleMeetPanel } from "./components/GoogleMeetPanel";
+import { GoogleChatPanel } from "./components/GoogleChatPanel";
+import { GoogleDocsExporter } from "./components/GoogleDocsExporter";
+import { GoogleSheetsExporter } from "./components/GoogleSheetsExporter";
+import { GoogleTasksIntegrator } from "./components/GoogleTasksIntegrator";
+import { VideoExecutiveSummary } from "./components/VideoExecutiveSummary";
+import {
+  AnalysisHistorySidebar,
+  AnalysisHistoryItem,
+} from "./components/AnalysisHistorySidebar";
 import {
   Eye,
   Tv,
@@ -17,6 +26,7 @@ import {
   Zap,
   Sun,
   Moon,
+  History,
 } from "lucide-react";
 
 // Pre-cached high-quality analysis data for the stock clips to enable instant playground interaction
@@ -280,6 +290,61 @@ export default function App() {
   const [customPrompt, setCustomPrompt] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // History State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [history, setHistory] = useState<AnalysisHistoryItem[]>(() => {
+    const saved = localStorage.getItem("analysis-history");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+    return [];
+  });
+
+  const handleDeleteHistoryItem = (id: string) => {
+    setHistory((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      localStorage.setItem("analysis-history", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleClearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem("analysis-history");
+  };
+
+  const handleSelectHistoryItem = (item: AnalysisHistoryItem) => {
+    const curated = CURATED_VIDEOS.find((v) => v.url === item.videoUrl);
+    if (curated) {
+      setSelectedVideo(curated);
+    } else {
+      setSelectedVideo({
+        id: "custom-" + item.timestamp,
+        title: item.videoTitle,
+        category: "Uploaded Video",
+        url: item.videoUrl,
+        duration: item.duration,
+        recommendedFeatures: ["label_detection", "object_tracking"],
+        description: "Loaded from custom analysis history."
+      });
+    }
+
+    setSelectedFeature(item.feature);
+    setCustomPrompt(item.customPrompt || "");
+
+    setAnalysisCaches((prev) => ({
+      ...prev,
+      [item.videoUrl]: {
+        ...(prev[item.videoUrl] || {}),
+        [item.feature]: item.result,
+      },
+    }));
+  };
+
   // Maintain active analysis state caches
   const [analysisCaches, setAnalysisCaches] = useState<Record<string, Record<VideoFeature, VideoAnalysisResult>>>({});
 
@@ -360,6 +425,24 @@ export default function App() {
         };
       });
 
+      // Save custom analysis to local storage history automatically
+      const newHistoryItem: AnalysisHistoryItem = {
+        id: "hist-" + Date.now(),
+        videoUrl: selectedVideo.url,
+        videoTitle: selectedVideo.title,
+        duration: selectedVideo.duration,
+        feature: selectedFeature,
+        customPrompt: customPrompt || undefined,
+        timestamp: Date.now(),
+        result,
+      };
+
+      setHistory((prev) => {
+        const updated = [newHistoryItem, ...prev];
+        localStorage.setItem("analysis-history", JSON.stringify(updated));
+        return updated;
+      });
+
     } catch (err: any) {
       console.error(err);
       alert(`Analysis Failed: ${err.message || "An unexpected error occurred."}`);
@@ -401,6 +484,25 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {/* History Toggle Button */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className={`relative p-2 rounded-xl border transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                theme === "light"
+                  ? "bg-zinc-100 border-zinc-300 hover:bg-zinc-200 text-zinc-900 focus:ring-2 focus:ring-zinc-600"
+                  : "bg-zinc-900 border-zinc-700 hover:bg-zinc-800 text-white focus:ring-2 focus:ring-white"
+              }`}
+              aria-label="Open Analysis History"
+              title="Open Analysis History"
+            >
+              <History className="h-5 w-5 text-indigo-500" />
+              {history.length > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] font-bold font-mono h-5 w-5 rounded-full flex items-center justify-center animate-pulse border border-white dark:border-black">
+                  {history.length}
+                </span>
+              )}
+            </button>
+
             {/* Accessibility Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -512,7 +614,43 @@ export default function App() {
             </div>
 
             {/* Analysis details displays */}
-            <AnalysisResultsDisplay selectedFeature={selectedFeature} result={activeAnalysis} theme={theme} />
+            {activeAnalysis?.summary && (
+              <VideoExecutiveSummary summary={activeAnalysis.summary} theme={theme} />
+            )}
+            <AnalysisResultsDisplay
+              selectedFeature={selectedFeature}
+              result={activeAnalysis}
+              theme={theme}
+              onSaveToHistory={
+                activeAnalysis
+                  ? () => {
+                      const exists = history.some(
+                        (h) => h.videoUrl === selectedVideo.url && h.feature === selectedFeature
+                      );
+                      if (exists) {
+                        alert("This analysis is already saved in your history.");
+                        return;
+                      }
+                      const newItem: AnalysisHistoryItem = {
+                        id: "hist-" + Date.now(),
+                        videoUrl: selectedVideo.url,
+                        videoTitle: selectedVideo.title,
+                        duration: selectedVideo.duration,
+                        feature: selectedFeature,
+                        customPrompt: customPrompt || undefined,
+                        timestamp: Date.now(),
+                        result: activeAnalysis,
+                      };
+                      setHistory((prev) => {
+                        const updated = [newItem, ...prev];
+                        localStorage.setItem("analysis-history", JSON.stringify(updated));
+                        return updated;
+                      });
+                      alert("Analysis saved successfully to your history!");
+                    }
+                  : undefined
+              }
+            />
           </div>
 
           {/* Right Column: Source and Feature select parameters (Take up 4 cols on desktop) */}
@@ -525,6 +663,35 @@ export default function App() {
 
             {/* Google Meet Panel */}
             <GoogleMeetPanel theme={theme} activeVideoTitle={selectedVideo.title} />
+
+            {/* Google Chat Panel */}
+            <GoogleChatPanel
+              theme={theme}
+              activeVideoTitle={selectedVideo.title}
+              selectedFeature={selectedFeature}
+              activeAnalysis={activeAnalysis}
+            />
+
+            {/* Google Docs Exporter */}
+            <GoogleDocsExporter
+              theme={theme}
+              activeVideoTitle={selectedVideo.title}
+              activeAnalysis={activeAnalysis}
+            />
+
+            {/* Google Sheets Exporter */}
+            <GoogleSheetsExporter
+              theme={theme}
+              activeVideoTitle={selectedVideo.title}
+              activeAnalysis={activeAnalysis}
+            />
+
+            {/* Google Tasks Integrator */}
+            <GoogleTasksIntegrator
+              theme={theme}
+              activeVideoTitle={selectedVideo.title}
+              activeAnalysis={activeAnalysis}
+            />
           </div>
         </div>
 
@@ -551,6 +718,17 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Analysis History Side panel */}
+      <AnalysisHistorySidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        history={history}
+        onSelectHistoryItem={handleSelectHistoryItem}
+        onDeleteHistoryItem={handleDeleteHistoryItem}
+        onClearHistory={handleClearHistory}
+        theme={theme}
+      />
     </div>
   );
 }
